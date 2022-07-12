@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AplikasiPetani">
         <activity
+            android:name=".WaterReqGraphActivity"
+            android:exported="false" />
+        <activity
             android:name=".GraphPrediksiActivity"
             android:exported="false" />
         <activity
