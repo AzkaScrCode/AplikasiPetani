@@ -76,7 +76,7 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
 
         String year = (String) mSpinnerYear.getSelectedItem();
 
-        reference = database.getReference("water-requirements " + year);
+        reference = database.getReference("Water Requirements").child(year);
 
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -97,6 +97,9 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
                 for(DataSnapshot item : snapshot.getChildren()){
 
                     Long hari = (Long) item.child("hari").getValue();
+                    String wetStatus = (String) item.child("wetStatus").getValue();
+                    String normalStatus = (String) item.child("normalStatus").getValue();
+                    String dryStatus = (String) item.child("dryStatus").getValue();
 
                     Object objDry = item.child("dryBalance").getValue();
                     Object objNormal = item.child("normalBalance").getValue();
@@ -113,6 +116,7 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
                     dp[index] = new DataPoint(hari,dryBalance);
                     dp2[index] = new DataPoint(hari, normalBalance);
                     dp3[index] = new DataPoint(hari, wetBalance);
+
 
                     index++;
                 }
