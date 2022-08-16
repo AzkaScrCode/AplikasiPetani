@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity{
         mBtnGraphWaterReq.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), GraphPrediksiActivity.class);
+                Intent intent = new Intent(view.getContext(), WaterReqGraphActivity.class);
                 startActivity(intent);
             }
         });
