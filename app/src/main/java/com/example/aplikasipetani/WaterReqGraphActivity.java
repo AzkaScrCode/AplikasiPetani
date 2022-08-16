@@ -1,17 +1,16 @@
 package com.example.aplikasipetani;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,10 +19,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.LegendRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WaterReqGraphActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -35,6 +37,7 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
     private Spinner mSpinnerYear;
     private Button mBtnTampilkanGraph;
     private GraphView mGraphView;
+    private RecyclerView mRecyclerView;
 
     private LineGraphSeries series;
     private LineGraphSeries series2;
@@ -50,6 +53,7 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
         mSpinnerYear = findViewById(R.id.spinner_tahun_water_graph);
         mBtnTampilkanGraph = findViewById(R.id.button_tampilkan_req_graph);
         mGraphView = findViewById(R.id.graph_wat_req);
+        mRecyclerView = findViewById(R.id.rv_wat_req);
 
         mBtnTampilkanGraph.setOnClickListener(this);
 
@@ -57,17 +61,36 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
         series2 = new LineGraphSeries();
         series3 = new LineGraphSeries();
 
+        series.setColor(Color.RED);
+        series.setTitle("dry");
+
+        series2.setColor(Color.BLUE);
+        series2.setTitle("normal");
+
+        series3.setColor(Color.GREEN);
+        series3.setTitle("wet");
+
         mGraphView.addSeries(series);
         mGraphView.addSeries(series2);
         mGraphView.addSeries(series3);
 
         mGraphView.getViewport().setScalable(true);
-        mGraphView.getViewport().setScalableY(true);
+        mGraphView.getViewport().setScrollable(true);
+
+        mGraphView.getViewport().setXAxisBoundsManual(true);
+        mGraphView.getViewport().setMinX(1d);
+        mGraphView.getViewport().setMaxX(365d);
+
+        mGraphView.getLegendRenderer().setVisible(true);
+        mGraphView.getLegendRenderer().setAlign(LegendRenderer.LegendAlign.TOP);
 
 
         GridLabelRenderer gridLabelRenderer = mGraphView.getGridLabelRenderer();
         gridLabelRenderer.setHorizontalAxisTitle("Hari");
         gridLabelRenderer.setVerticalAxisTitle("Net Laju (mm/hari)");
+
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
     }
 
@@ -78,7 +101,7 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
 
         reference = database.getReference("Water Requirements").child(year);
 
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+        reference.orderByChild("hari").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
@@ -93,6 +116,8 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
                 DataPoint[] dp3 = new DataPoint[(int) snapshot.getChildrenCount()];
 
                 int index = 0;
+
+                List<WaterBalance> waterBalances = new ArrayList<>();
 
                 for(DataSnapshot item : snapshot.getChildren()){
 
@@ -117,13 +142,29 @@ public class WaterReqGraphActivity extends AppCompatActivity implements View.OnC
                     dp2[index] = new DataPoint(hari, normalBalance);
                     dp3[index] = new DataPoint(hari, wetBalance);
 
+                    WaterBalance wb = new WaterBalance();
+                    wb.setWet(wetBalance);
+                    wb.setNormal(normalBalance);
+                    wb.setDry(dryBalance);
+                    wb.setWetStatus(wetStatus);
+                    wb.setNormalStatus(normalStatus);
+                    wb.setDryStatus(dryStatus);
+                    wb.setHari(hari);
+
+                    waterBalances.add(wb);
 
                     index++;
                 }
 
+
+
                 series.resetData(dp);
                 series2.resetData(dp2);
                 series3.resetData(dp3);
+
+
+                WaterReqAdapter adapter = new WaterReqAdapter(waterBalances);
+                mRecyclerView.setAdapter(adapter);
             }
 
             @Override
